@@ -1,0 +1,582 @@
+{
+  "name": "Telegram Audio Idea Organizer - Gemini Powered",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "id": "b8eca50a-4d25-4a61-83b7-bc30aaca012c",
+      "name": "Receive Audio Message",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        416
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an idea extraction assistant. Analyze the transcribed text and extract all distinct ideas mentioned. For each idea, determine: 1) A descriptive category that fits the idea's domain (e.g., Business, Health, Technology, Personal, Creative, etc.), 2) Priority level (High, Medium, Low) based on urgency or importance implied, 3) Difficulty level (Easy, Medium, Hard) based on complexity or effort required. Return all ideas as a structured list."
+        }
+      },
+      "id": "d3e4774f-2c7c-4941-a554-d6eac48de80b",
+      "name": "Extract and Classify Ideas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1152,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"ideas\": {\n\t\t\t\"type\": \"array\",\n\t\t\t\"items\": {\n\t\t\t\t\"type\": \"object\",\n\t\t\t\t\"properties\": {\n\t\t\t\t\t\"idea\": {\n\t\t\t\t\t\t\"type\": \"string\"\n\t\t\t\t\t},\n\t\t\t\t\t\"category\": {\n\t\t\t\t\t\t\"type\": \"string\"\n\t\t\t\t\t},\n\t\t\t\t\t\"priority\": {\n\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\"enum\": [\"High\", \"Medium\", \"Low\"]\n\t\t\t\t\t},\n\t\t\t\t\t\"difficulty\": {\n\t\t\t\t\t\t\"type\": \"string\",\n\t\t\t\t\t\t\"enum\": [\"Easy\", \"Medium\", \"Hard\"]\n\t\t\t\t\t}\n\t\t\t\t},\n\t\t\t\t\"required\": [\"idea\", \"category\", \"priority\", \"difficulty\"]\n\t\t\t}\n\t\t}\n\t},\n\t\"required\": [\"ideas\"]\n}"
+      },
+      "id": "4c5d09be-404d-4d1e-b021-c33b47b9537e",
+      "name": "Structure Ideas Output",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1296,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.ideas",
+        "options": {}
+      },
+      "id": "b46bac96-34aa-470b-b5e0-0330ef65e0e3",
+      "name": "Split Ideas into Rows",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "idea",
+              "value": "={{ $json.idea }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "priority",
+              "value": "={{ $json.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "difficulty",
+              "value": "={{ $json.difficulty }}",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "created_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d0c42b7-5a79-4231-8666-64cba4c5e579",
+      "name": "Prepare Data for Table",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YOUR_DATA_TABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idea": "={{ $json.idea }}",
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "difficulty": "={{ $json.difficulty }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "idea",
+              "displayName": "idea",
+              "type": "string"
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "type": "string"
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "type": "string"
+            },
+            {
+              "id": "difficulty",
+              "displayName": "difficulty",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "b57a7584-3235-4ba8-932f-c9ce35dc4712",
+      "name": "Store Ideas",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "5b741e83-0b24-471b-b840-10c8f353c400",
+      "name": "Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        528
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PLACEHOLDER_ID",
+          "name": "Google Gemini Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": false
+        }
+      },
+      "id": "abbad954-e29c-45b9-9104-db1a447d2379",
+      "name": "Receive List Command",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        736
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/idealist",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ]
+        }
+      },
+      "id": "95636101-902e-4c99-917b-2c81b09d7855",
+      "name": "Check for List Command",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_DATA_TABLE_ID"
+        },
+        "returnAll": true
+      },
+      "id": "b60b89e6-f4f6-4225-98c4-707301f7a82d",
+      "name": "Get All Ideas",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "category"
+            },
+            {
+              "fieldName": "priority",
+              "order": "descending"
+            }
+          ]
+        }
+      },
+      "id": "cf9923ee-4922-4de5-b552-081663823e5b",
+      "name": "Sort by Category and Priority",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        928,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData"
+      },
+      "id": "ce3e51a4-60c3-4e15-853d-df362299305f",
+      "name": "Combine All Ideas",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Receive List Command').item.json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "Here is the complete list of your ideas organized by category and priority! 📋"
+        }
+      },
+      "id": "ea1b879d-646e-44ae-8b01-98cf40ac79e8",
+      "name": "Send PDF to User",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1616,
+        736
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "id": "e52cb30c-8036-4e0a-8b38-30665db43b3f",
+      "name": "Get Audio File",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        416
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GROQ_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            }
+          ]
+        }
+      },
+      "id": "0da9cf11-d8ac-406d-adbb-a0e773e014de",
+      "name": "Transcribe Audio via Groq",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfor (const item of items) {\n  if (item.binary && item.binary.data) {\n    item.binary.data.fileName = 'audio.ogg';\n  }\n}\n\nreturn items;"
+      },
+      "id": "39e2f277-c7af-4736-bd65-87931a28bfad",
+      "name": "Rename to OGG",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Fetch ideas from input\nconst ideas = $input.first().json.data;\n\n// 2. Build HTML\nlet htmlBody = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }\n    h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #2c3e50; padding-bottom: 10px; }\n    .category-section { margin-bottom: 20px; background-color: white; padding: 20px; border-radius: 8px; border-left: 5px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n    .category-tag { display: inline-block; background-color: #3498db; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }\n    h3 { margin: 0 0 10px 0; color: #2c3e50; }\n    .meta-info { color: #7f8c8d; font-size: 14px; font-style: italic; }\n  </style>\n</head>\n<body>\n<h1>My Ideas</h1>`;\n\nideas.forEach(item => {\n  if (item.idea) {\n    htmlBody += `\n      <div class=\"category-section\">\n        <span class=\"category-tag\">${item.category || 'General'}</span>\n        <h3>${item.idea}</h3>\n        <p class=\"meta-info\">\n          <strong>Priority:</strong> ${item.priority || 'N/A'} | \n          <strong>Difficulty:</strong> ${item.difficulty || 'N/A'}\n        </p>\n      </div>`;\n  }\n});\n\nhtmlBody += `</body></html>`;\n\n// 3. TRANSFORM TO BINARY\nconst binaryData = await helpers.prepareBinaryData(Buffer.from(htmlBody), 'My_Ideas.html', 'text/html');\n\nreturn [\n  {\n    json: { message: \"File generated successfully\" },\n    binary: {\n      data: binaryData\n    }\n  }\n];"
+      },
+      "id": "74554818-828d-4fb7-85c7-75549fc3273a",
+      "name": "Build HTML Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        736
+      ]
+    }
+  ],
+  "connections": {
+    "Receive Audio Message": {
+      "main": [
+        [
+          {
+            "node": "Get Audio File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structure Ideas Output": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Extract and Classify Ideas",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract and Classify Ideas": {
+      "main": [
+        [
+          {
+            "node": "Split Ideas into Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Ideas into Rows": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data for Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data for Table": {
+      "main": [
+        [
+          {
+            "node": "Store Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract and Classify Ideas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive List Command": {
+      "main": [
+        [
+          {
+            "node": "Check for List Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for List Command": {
+      "main": [
+        [
+          {
+            "node": "Get All Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Ideas": {
+      "main": [
+        [
+          {
+            "node": "Sort by Category and Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by Category and Priority": {
+      "main": [
+        [
+          {
+            "node": "Combine All Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Ideas": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio File": {
+      "main": [
+        [
+          {
+            "node": "Rename to OGG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Audio via Groq": {
+      "main": [
+        [
+          {
+            "node": "Extract and Classify Ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename to OGG": {
+      "main": [
+        [
+          {
+            "node": "Transcribe Audio via Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Content": {
+      "main": [
+        [
+          {
+            "node": "Send PDF to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

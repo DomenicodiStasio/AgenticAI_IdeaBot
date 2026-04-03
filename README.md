@@ -14,15 +14,15 @@
 ## 🌟 The Problem: Great ideas never strike when you're at your desk.
 They hit while you’re driving, running, or at the grocery store. Opening a notes app, typing, and categorizing takes too long... and the spark vanishes.
 
-## ✨ The Solution: IdeaFlow
-Turn your Telegram Bot into a personal brain assistant. Send a **10-second voice message**, and IdeaFlow handles all the dirty work.
+## ✨ The Solution: IdeaBot
+Turn your Telegram Bot into a personal brain assistant. Send a **short voice message**, and IdeaBot handles all the dirty work.
 
 ### 🔄 The Idea Lifecycle
 1.  **Speak**: Record a voice note on Telegram 🗣️
 2.  **AI Transcribes**: Groq/Whisper converts voice to text 📝
 3.  **The Brain (Gemini)**: Analyzes the text to extract Category, Priority (High/Med/Low), and Difficulty 🧠
-4.  **Saves**: Archives everything to your Database (Google Sheets/Airtable) 📊
-5.  **Reports**: On-demand, it generates an **elegantly formatted HTML/PDF report** and sends it back to you 📄
+4.  **Saves**: Archives everything to your Database 📊
+5.  **Reports**: On-demand, it generates an **elegantly formatted HTML report** and sends it back to you 📄
 
 ---
 
